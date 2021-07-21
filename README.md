@@ -2,5 +2,5 @@
 
 just a snake game
 
-- [] add snake
-- [] use OOP structure
+- [ ] add snake
+- [ ] use OOP structure
