@@ -1,34 +1,61 @@
+import pygame
+from pygame.locals import *
+from random import randint
+import sys
+print("loaded controller")
 class Controller:
+
+	def randpos(self, startX, endX, startY, endY):
+		return (randint(startX, endX), randint(startY, endY))
+
 	def __init__(self, game, view=None):
-		self.screen = pygame.display.set_mode((width, height))
+		self.game = game
+
+		if view == None:
+			print("noview")
+		pygame.init()
+		self.screen = pygame.display.set_mode((640, 640))
+
+
+	def listenKeyboard(self):
+					
+		keys = pygame.key.get_pressed()
+		if keys[ord('a')]:
+			self.game.go_left()
+		if keys[ord('d')]:
+			self.game.go_right()
+		if keys[ord('w')]:
+			self.game.go_up()
+		if keys[ord('s')]:
+			self.game.go_down()
+
 	def run(self):
+		clock = pygame.time.Clock()
+		print("running")
 		# while loop
 		# listens to keyboard interrupts; calls functions for each key action
 		# controls time steps and update rate of the view
-		updateSpeed = 30 # FPS
+		updateSpeed = 2 # FPS
 		while True:
 			
-			self.screen.fill(0,0,0)
+			self.screen.fill((0,0,0))
 			
 			# handle quit event
 			for event in pygame.event.get():
-			if event.type == QUIT:
-				pygame.quit()
-				sys.exit()
+				if event.type == QUIT:
+					pygame.quit()
+					break
+			
+			self.listenKeyboard()
+
 			
 			
-			keys = pygame.key.get_pressed()
-			if keys[ord('a')]:
-				game.go_left()
-			if keys[ord('d')]:
-				game.go_right()
-			if keys[ord('w')]:
-				game.go_up()
-			if keys[ord('s')]:
-				game.go_down()
-			
-			
-			game.step()
-			self.screen.flip()
-			pygame.clock.tick(updateSpeed)
+			status = self.game.step()
+			if status != None:
+				if status[0] == "GameOver":
+					print("Game Over!")
+					print("Score was", status[1])
+					break
+			pygame.display.update()
+			clock.tick(updateSpeed)
 			
