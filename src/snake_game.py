@@ -4,13 +4,13 @@ import src.controller as controller
 
 
 class SnakeGame:
-	class SnakeBody:
-		def __init__(self):
-			self.up = False
-			self.down = False
-			self.left = False
-			self.right = False
-			self.head = False
+	# class SnakeBody:
+	# 	def __init__(self):
+	# 		self.up = False
+	# 		self.down = False
+	# 		self.left = False
+	# 		self.right = False
+	# 		self.head = False
 
 	def __init__(self, view=None):
 		print("init snakegame")
@@ -36,6 +36,8 @@ class SnakeGame:
 		self.initSnake(15, 15)
 		# if view is given, every time status of game changes internally update the view
 		# view.update(something): different updates for different changes
+	
+	# TODO: you can suicide by going one direction and pressing opposite dir
 	def go_left(self):
 		self.dir = "left"
 	
@@ -53,6 +55,7 @@ class SnakeGame:
 		for i in range(x-length+1, x+1):
 			self.snake.append([i, y])
 	
+	# this function is bugged: if there are no positions to spawn food it will loop infinitely
 	def spawnFood(self):
 		valid = False
 		while not valid:
@@ -115,10 +118,14 @@ class SnakeGame:
 	def checkFood(self):
 		headX = self.snake[-1][0]
 		headY = self.snake[-1][1]
+		tmpFood = self.food[:]
 
-		for n, i in enumerate(self.food):
+		for n, i in enumerate(tmpFood):
 			if i[0] == headX and i[1] == headY:
 				self.food.pop(n)
+				return True
+
+		return False
 
 	def doOutput(self):
 		# check if a view is given
