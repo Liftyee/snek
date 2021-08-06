@@ -24,8 +24,13 @@ class SnakeGame:
 		self.boardY = 30
 		self.score = 0
 
+		self.FoodScoreInc = 100
+		self.FoodLenInc = 3
+		self.ExistScoreInc = 10
+
 		self.food = []
 		self.maxFood = 1
+		self.maxFoodSpawnAttempts = 50
 
 		self.level = 1
 	
@@ -59,10 +64,14 @@ class SnakeGame:
 		for i in range(x-length+1, x+1):
 			self.snake.append([i, y])
 	
+	def getHeadPos(self):
+		return (self.snake[-1][0], self.snake[-1][1])
+
 	# this function is bugged: if there are no positions to spawn food it will loop infinitely
 	def spawnFood(self):
 		valid = False
-		while not valid:
+		attempts = 0
+		while not valid and attempts < self.maxFoodSpawnAttempts:
 			# generate a random position for the food
 			### foodx, foody = controller.randpos(0, self.boardX, 0, self.boardY)
 			# previous line doesn't work???  AttributeError: module 'src.controller' has no attribute 'randpos'
@@ -81,8 +90,14 @@ class SnakeGame:
 					valid = False
 					break
 			
-		# the position is safe; add it
-		self.food.append([foodx, foody])
+			attempts += 1
+		
+		if valid:
+			# the position is safe; add it
+			self.food.append([foodx, foody])
+		else:
+			# we ran out of attempts
+			print("Err: no positions to spawn food")
 
 	def moveForward(self):
 
@@ -90,8 +105,7 @@ class SnakeGame:
 			self.snake.pop(0)
 
 		# get current x and y
-		cx = self.snake[-1][0]
-		cy = self.snake[-1][1]
+		cx, cy = self.getHeadPos()
 
 		# calculate changes to x and y
 		dx = self.dirs[self.dir][0]
@@ -100,8 +114,7 @@ class SnakeGame:
 		self.snake.append([cx+dx, cy+dy])
 
 	def checkGameOver(self):
-		headX = self.snake[-1][0]
-		headY = self.snake[-1][1]
+		headX, headY = self.getHeadPos()
 
 		# check for wall collide gameover
 		if not 0<=headX<=self.boardX:
@@ -120,8 +133,8 @@ class SnakeGame:
 		return False
 
 	def checkFood(self):
-		headX = self.snake[-1][0]
-		headY = self.snake[-1][1]
+		headX, headY = self.getHeadPos()
+
 		tmpFood = self.food[:]
 
 		for n, i in enumerate(tmpFood):
@@ -170,11 +183,11 @@ class SnakeGame:
 			return ("GameOver", self.score)
 
 		if self.checkFood():
-			self.maxLength += 3
-			self.score += 100
+			self.maxLength += self.FoodLenInc
+			self.score += self.FoodScoreInc
 
 
-		self.score += 10 # give some score for surviving
+		self.score += self.ExistScoreInc # give some score for surviving
 
 		# output the data
 		self.doOutput()
