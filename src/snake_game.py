@@ -42,7 +42,6 @@ class SnakeGame:
 		# if view is given, every time status of game changes internally update the view
 		# view.update(something): different updates for different changes
 	
-	# TODO: you can suicide by going one direction and pressing opposite dir
 	def go_left(self):
 		if self.dir != "right":
 			self.dir = "left"
@@ -67,7 +66,6 @@ class SnakeGame:
 	def getHeadPos(self):
 		return (self.snake[-1][0], self.snake[-1][1])
 
-	# this function is bugged: if there are no positions to spawn food it will loop infinitely
 	def spawnFood(self):
 		valid = False
 		attempts = 0
