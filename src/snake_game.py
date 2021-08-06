@@ -39,16 +39,20 @@ class SnakeGame:
 	
 	# TODO: you can suicide by going one direction and pressing opposite dir
 	def go_left(self):
-		self.dir = "left"
+		if self.dir != "right":
+			self.dir = "left"
 	
 	def go_right(self):
-		self.dir = "right"
+		if self.dir != "left":
+			self.dir = "right"
 	
 	def go_up(self): 
-		self.dir = "up"
+		if self.dir != "down":
+			self.dir = "up"
 	
 	def go_down(self):
-		self.dir = "down"
+		if self.dir != "up":
+			self.dir = "down"
 
 	def initSnake(self, x, y, length=5):
 		# adds some amount of units to the snake, initializes their coordinates in the list
