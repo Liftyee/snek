@@ -5,16 +5,14 @@ import sys
 print("loaded controller")
 class Controller:
 
-	def __init__(self, game, updateRate=2, view=None):
+	def __init__(self, game, updateRate=4, view=None):
 		self.game = game
 		self.updateRate = updateRate
 
 		if view == None:
 			print("noview")
-		pygame.init()
-
-		# TODO: MOVE TO VIEW
-		self.screen = pygame.display.set_mode((640, 640))
+		self.view = view
+		
 
 	def randpos(self, startX, endX, startY, endY):
 		return (randint(startX, endX), randint(startY, endY))
@@ -40,10 +38,6 @@ class Controller:
 		# controls time steps and update rate of the view
 		 # FPS
 		while True:
-			
-			# goes in view
-			self.screen.fill((0,0,0))
-			# ^
 
 			# handle quit event
 			for event in pygame.event.get():
@@ -53,7 +47,7 @@ class Controller:
 			
 			self.listenKeyboard()
 
-			
+			self.view.clearScreen()
 			
 			status = self.game.step()
 			if status != None:
@@ -62,9 +56,10 @@ class Controller:
 					print("Score was", status[1])
 					break
 			
-			# goes in view
-			pygame.display.update()
-			# ^
+			
+
+			if self.view != None:
+				self.view.update()
 
 			# TODO: this makes the checking of keyboard only happen every update rate
 			clock.tick(self.updateRate)

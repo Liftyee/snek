@@ -144,11 +144,15 @@ class SnakeGame:
 
 	def doOutput(self):
 		# check if a view is given
-		if True:#self.view == None:
+		if self.view == None or True:
 			print("Snake segments:", self.snake)
 			print("Food locations:", self.food)
 			print("Score:", self.score)
 			print("Direction:", self.dir)
+
+		if self.view != None:
+			self.view.renderSnake(self.snake)
+			self.view.renderFood(self.food)
 	
 
 	def step(self):
