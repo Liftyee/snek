@@ -5,9 +5,10 @@ import sys
 print("loaded controller")
 class Controller:
 
-	def __init__(self, game, updateRate=4, view=None):
+	def __init__(self, game, updateRate=5, view=None):
 		self.game = game
 		self.updateRate = updateRate
+		self.keyboardCheckRate = 60
 
 		if view == None:
 			print("noview")
@@ -37,30 +38,32 @@ class Controller:
 		# listens to keyboard interrupts; calls functions for each key action
 		# controls time steps and update rate of the view
 		 # FPS
+		counter = 0
 		while True:
 
-			# handle quit event
-			for event in pygame.event.get():
-				if event.type == QUIT:
-					pygame.quit()
-					break
+
 			
 			self.listenKeyboard()
 
 			self.view.clearScreen()
 			
-			status = self.game.step()
-			if status != None:
-				if status[0] == "GameOver":
-					print("Game Over!")
-					print("Score was", status[1])
-					break
+			if counter >= self.keyboardCheckRate//self.updateRate:
+				counter = 0
+				status = self.game.step()
+				if status != None:
+					if status[0] == "GameOver":
+						print("Game Over!")
+						print("Score was", status[1])
+						break
+				
+				if self.view != None:
+					self.view.update()
+			else:
+				counter += 1
 			
 			
 
-			if self.view != None:
-				self.view.update()
 
-			# TODO: this makes the checking of keyboard only happen every update rate
-			clock.tick(self.updateRate)
+
+			clock.tick(self.keyboardCheckRate)
 			
