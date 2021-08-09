@@ -12,9 +12,12 @@ class SnakeGame:
 	# 		self.right = False
 	# 		self.head = False
 
-	def __init__(self, view=None):
+	def __init__(self, view=None, boardX=30, boardY=30):
 		print("init snakegame")
+		self.debug = False
+
 		self.view = view
+		self.view.updateScale(boardX, boardY)
 
 		# list of snake bodies
 		self.snake = []
@@ -71,8 +74,6 @@ class SnakeGame:
 		attempts = 0
 		while not valid and attempts < self.maxFoodSpawnAttempts:
 			# generate a random position for the food
-			### foodx, foody = controller.randpos(0, self.boardX, 0, self.boardY)
-			# previous line doesn't work???  AttributeError: module 'src.controller' has no attribute 'randpos'
 			foodx, foody = (randint(0, self.boardX), randint(0, self.boardY))
 			
 			# check if the position conflicts with snake body
@@ -144,7 +145,7 @@ class SnakeGame:
 
 	def doOutput(self):
 		# check if a view is given
-		if self.view == None or True:
+		if self.view == None or self.debug == True:
 			print("Snake segments:", self.snake)
 			print("Food locations:", self.food)
 			print("Score:", self.score)

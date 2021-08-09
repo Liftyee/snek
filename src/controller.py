@@ -41,29 +41,27 @@ class Controller:
 		counter = 0
 		while True:
 
-
-			
 			self.listenKeyboard()
-
-			self.view.clearScreen()
 			
 			if counter >= self.keyboardCheckRate//self.updateRate:
 				counter = 0
+
+				if self.view != None:
+					self.view.clearScreen()
+
 				status = self.game.step()
 				if status != None:
 					if status[0] == "GameOver":
+						
 						print("Game Over!")
 						print("Score was", status[1])
 						break
 				
 				if self.view != None:
-					self.view.update()
+					if not self.view.update():
+						exit()
 			else:
 				counter += 1
 			
-			
-
-
-
 			clock.tick(self.keyboardCheckRate)
 			
