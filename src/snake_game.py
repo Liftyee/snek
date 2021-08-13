@@ -12,12 +12,11 @@ class SnakeGame:
 	# 		self.right = False
 	# 		self.head = False
 
-	def __init__(self, view=None, boardX=30, boardY=30):
+	def __init__(self, hasView=True, boardX=30, boardY=30):
 		print("init snakegame")
 		self.debug = False
 
-		self.view = view
-		self.view.updateScale(boardX, boardY)
+		self.hasView = hasView
 
 		# list of snake bodies
 		self.snake = []
@@ -45,6 +44,12 @@ class SnakeGame:
 		# if view is given, every time status of game changes internally update the view
 		# view.update(something): different updates for different changes
 	
+	def reset(self):
+		self.snake = []
+		self.food = []
+		self.initSnake(15, 15)
+		self.score = 0
+
 	def go_left(self):
 		if self.dir != "right":
 			self.dir = "left"
@@ -145,15 +150,14 @@ class SnakeGame:
 
 	def doOutput(self):
 		# check if a view is given
-		if self.view == None or self.debug == True:
+		if self.hasView == False or self.debug == True:
 			print("Snake segments:", self.snake)
 			print("Food locations:", self.food)
 			print("Score:", self.score)
 			print("Direction:", self.dir)
 
-		if self.view != None:
-			self.view.renderSnake(self.snake)
-			self.view.renderFood(self.food)
+		if self.hasView == True:
+			return (self.snake, self.food)
 	
 
 	def step(self):
@@ -189,13 +193,12 @@ class SnakeGame:
 			self.maxLength += self.FoodLenInc
 			self.score += self.FoodScoreInc
 
-
+		
 		self.score += self.ExistScoreInc # give some score for surviving
 
 		# output the data
-		self.doOutput()
+		return self.doOutput()
 		
-		return None
 
 
 
