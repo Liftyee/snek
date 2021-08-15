@@ -5,11 +5,11 @@ import sys
 print("loaded controller")
 class Controller:
 
-	def __init__(self, game, updateRate=5, view=None):
+	def __init__(self, game, view=None):
 		self.game = game
-		self.updateRate = updateRate
+		self.updateRate = self.game.updateRate
 		self.keyboardCheckRate = 60
-		self.state = "run"
+		self.state = "menu"
 		self.stateInfo = "" # stores information such as game over score, etc
 		if view == None:
 			print("noview")
@@ -67,6 +67,8 @@ class Controller:
 							print(status[0])
 							self.view.renderSnake(status[0])
 							self.view.renderFood(status[1])
+							self.view.renderWalls(status[2])
+							self.view.renderScore(self.game.score)
 							if not self.view.update():
 								self.state = "exit"
 							
@@ -84,15 +86,26 @@ class Controller:
 
 			# game over is happened
 			elif self.state == "GameOver":
-				endmenustate = self.view.gameOver(self.stateInfo)
-				if endmenustate == "restart":
-					self.game.reset()
-					self.state = "run"
-				elif endmenustate == "stop":
-					self.state = "exit"
-					
+				self.state = self.view.gameOver(self.stateInfo, self.game.levelUp, self.game.level)
+			
+			elif self.state == "menu":
+				self.state = self.view.mainMenu(self.game.level, self.game.highscore)
+				
 			elif self.state == "exit":
+				self.game.saveData()
 				return 0
+			
+			elif self.state == "restart":
+				self.game.reset()
+				self.state = "run"
+				self.updateRate = self.game.updateRate
+
+			elif self.state == "deldata":
+				self.game.resetData()
+				self.state = "menu"
+
+			elif self.state == None:
+				print("is none")
 			else:
 				print("An error occurred.")
 				print(self.stateInfo)

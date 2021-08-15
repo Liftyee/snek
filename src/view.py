@@ -4,7 +4,7 @@ from pygame.locals import *
 print("loaded view")
 
 class Button:
-    def __init__(self, screen, x, y, width=None, height=None, text=None, color=(200, 120, 0)):
+    def __init__(self, screen, x, y, width=None, height=None, text=None, color=(120, 200, 40)):
         self.x = x
         self.y = y
         self.width = width
@@ -35,12 +35,14 @@ class View:
 
         self.snakeColor = (255, 0, 0)
         self.foodColor = (0, 255, 0)
+        self.wallColor = (200, 200, 200)
 
         self.dispW = displayWidth
         self.dispH = displayHeight
 
         pygame.init()
         self.screen = pygame.display.set_mode((displayWidth, displayHeight))
+        pygame.display.set_caption("snek")
 
         # load a font (MIGHT NOT WORK ON LINUX)
         pygame.font.init()
@@ -65,7 +67,6 @@ class View:
     def updateScale(self, gridX, gridY):
         self.gridScale = min(self.dispW//gridX, self.dispH//gridY)
 
-
     def renderSnake(self, snake):
         for i in snake:
             tx = i[0]*self.gridScale
@@ -78,11 +79,22 @@ class View:
             ty = i[1]*self.gridScale
             pygame.draw.rect(self.screen, self.foodColor, (tx, ty, self.gridScale, self.gridScale))
     
+    def renderWalls(self, walls):
+        for i in walls:
+            tx = i[0]*self.gridScale
+            ty = i[1]*self.gridScale
+            pygame.draw.rect(self.screen, self.wallColor, (tx, ty, self.gridScale, self.gridScale))
+    
+    def renderScore(self, score):
+        self.drawText("Score: " + str(score), 0, 0)
+
     def drawText(self, text, x, y):
         img1 = self.font.render(text, True, (255, 255, 255))
         self.screen.blit(img1, (x, y))
 
-    def gameOver(self, score):
+    def gameOver(self, score, levelUp, level):
+
+        self.clearScreen()
         self.drawText("Game Over!", 0, 0)
         self.drawText("Your score was: "+ str(score), 0, 40)
 
@@ -90,14 +102,48 @@ class View:
         menuBtn = Button(self.screen, 0, 120, 128, 32, "Main menu")
         restartBtn.draw()
         menuBtn.draw()
+
+        if levelUp:
+            self.drawText("You leveled up to level " + str(level) + "!", 0, 160)
+
         if not self.update():
-            return "stop"
+            return "exit"
+
         mousex, mousey = pygame.mouse.get_pos()
         if restartBtn.isPressed(mousex, mousey):
             return "restart"
         if menuBtn.isPressed(mousex, mousey):
             return "menu"
-        return None
+        return "GameOver"
+    
+    def mainMenu(self, level="N/A", highscore = "N/A"):
+        self.clearScreen()
+        self.screen.blit(pygame.image.load("snek.png"), (0, 0))
+
+        startBtn = Button(self.screen, 0, self.dispH-128, 128, 32, "Start")
+        resetBtn = Button(self.screen, 0, self.dispH-80, 128, 32, "Clear data")
+        exitBtn = Button(self.screen, 0, self.dispH-32, 128, 32, "Exit")
+    
+        startBtn.draw()
+        resetBtn.draw()
+        exitBtn.draw()
+
+        self.drawText("Level: " + str(level), 0, 200)
+        self.drawText("Highscore: " + str(highscore), 0, 240)
+
+        if not self.update():
+            return "exit"
+
+        mousex, mousey = pygame.mouse.get_pos()
+        if startBtn.isPressed(mousex, mousey):
+            return "restart"
+        if resetBtn.isPressed(mousex, mousey):
+            return "deldata"
+        if exitBtn.isPressed(mousex, mousey):
+            return "exit"
+        return "menu"
+    
+    
     # add game over screen (retry, quit) 
     # add start screen menus, level up page (change speed for level)
     # add score on view

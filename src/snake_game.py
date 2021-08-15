@@ -1,4 +1,5 @@
 from random import randint # TEMPORARY
+import pickle
 import src.view as view
 import src.controller as controller
 
@@ -12,34 +13,50 @@ class SnakeGame:
 	# 		self.right = False
 	# 		self.head = False
 
-	def __init__(self, hasView=True, boardX=30, boardY=30):
+	def __init__(self, hasView=True, savefile="data.snk", databoardX=30, boardY=30):
 		print("init snakegame")
 		self.debug = False
 
 		self.hasView = hasView
-
-		# list of snake bodies
-		self.snake = []
-		self.maxLength = 5 # starting length 5, this changes
 		
 		self.boardX = 30 # board size
 		self.boardY = 30
-		self.score = 0
 
-		self.FoodScoreInc = 100
+		self.FoodScoreInc = 200
 		self.FoodLenInc = 3
-		self.ExistScoreInc = 10
+		self.ExistScoreInc = 5
 
-		self.food = []
 		self.maxFood = 1
 		self.maxFoodSpawnAttempts = 50
 
+		self.maxWalls = 0
+
 		self.level = 1
-	
+		self.levelIncScore = 1000 # score increase for next level
+		self.highscore = 0
+		self.levelUp = False
+		
+		self.updateRate = 5
+		self.baseUpdateRate = 5 # default move rate in FPS
+		self.baseFood = self.maxFood
+		self.baseWalls = self.maxWalls
+		self.levelFPSInc = 1 # FPS increase per level
+		self.levelFoodInc = 0.5 # food number increase per level
+		self.levelWallInc = 0.5 # wall number increase per level
+
 		# dirs dict maps word directions to change in (x, y) coordinates 
 		self.dirs = {"up":(0,-1), "down":(0,1), "left":(-1,0), "right":(1,0)}
 		self.dir = "right"
 
+		self.savefile = savefile
+		try:
+			data = pickle.load(open(savefile, 'rb'))
+			self.highscore = data["highscore"]
+			self.level = data["level"]
+
+		except Exception as e:
+			print("error loading save:", e)
+		self.reset()
 		self.initSnake(15, 15)
 		# if view is given, every time status of game changes internally update the view
 		# view.update(something): different updates for different changes
@@ -47,8 +64,25 @@ class SnakeGame:
 	def reset(self):
 		self.snake = []
 		self.food = []
+		self.walls = []
 		self.initSnake(15, 15)
 		self.score = 0
+		self.maxLength = 5 # starting length 5, this changes
+		self.levelUp = False
+		self.maxFood = self.baseFood + (self.level*self.levelFoodInc)
+		self.updateRate = self.baseUpdateRate + (self.level*self.levelFPSInc)
+		self.maxWalls = self.baseWalls + (self.level*self.levelWallInc)
+		print(self.snake)
+
+	def saveData(self):
+		tempdata = {"highscore":self.highscore, "level":self.level}
+		datafile = open(self.savefile, "wb")
+		pickle.dump(tempdata, datafile)
+		datafile.close()
+
+	def resetData(self):
+		self.highscore = 0
+		self.level = 1
 
 	def go_left(self):
 		if self.dir != "right":
@@ -94,6 +128,11 @@ class SnakeGame:
 					valid = False
 					break
 			
+			for i in self.walls:
+				if i[0] == foodx and i[1] == foody:
+					valid = False
+					break
+			
 			attempts += 1
 		
 		if valid:
@@ -102,6 +141,42 @@ class SnakeGame:
 		else:
 			# we ran out of attempts
 			print("Err: no positions to spawn food")
+
+	def spawnWall(self):
+		valid = False
+		attempts = 0
+
+		# copy pasted code from spawning food
+		while not valid and attempts < self.maxFoodSpawnAttempts:
+			# generate a random position for the wall
+			foodx, foody = (randint(0, self.boardX), randint(0, self.boardY))
+			
+			# check if the position conflicts with snake body
+			valid = True
+			for i in self.snake:
+				if i[0] == foodx and i[1] == foody:
+					valid = False
+					break
+			
+			# check if the position conflicts with existing wall
+			for i in self.food:
+				if i[0] == foodx and i[1] == foody:
+					valid = False
+					break
+
+			for i in self.walls:
+				if i[0] == foodx and i[1] == foody:
+					valid = False
+					break
+			
+			attempts += 1
+		
+		if valid:
+			# the position is safe; add it
+			self.walls.append([foodx, foody])
+		else:
+			# we ran out of attempts
+			print("Err: no positions to spawn wall")
 
 	def moveForward(self):
 
@@ -134,6 +209,10 @@ class SnakeGame:
 				#print("gameover due to self collision")
 				return True
 		
+		for i in self.walls:
+				if i[0] == headX and i[1] == headY:
+					return True
+					
 		return False
 
 	def checkFood(self):
@@ -157,7 +236,7 @@ class SnakeGame:
 			print("Direction:", self.dir)
 
 		if self.hasView == True:
-			return (self.snake, self.food)
+			return (self.snake, self.food, self.walls)
 	
 
 	def step(self):
@@ -183,10 +262,15 @@ class SnakeGame:
 		if len(self.food) < self.maxFood: 
 			self.spawnFood()
 		
+		if len(self.walls) < self.maxWalls:
+			self.spawnWall()
+
 		self.moveForward()
 
 		if self.checkGameOver():
 			print("snake is dead")
+			if self.score > self.highscore:
+				self.highscore = self.score
 			return ("GameOver", self.score)
 
 		if self.checkFood():
@@ -195,6 +279,10 @@ class SnakeGame:
 
 		
 		self.score += self.ExistScoreInc # give some score for surviving
+
+		if self.score >= self.levelIncScore*self.level and not self.levelUp:
+			self.level += 1
+			self.levelUp = True
 
 		# output the data
 		return self.doOutput()
