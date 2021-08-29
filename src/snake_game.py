@@ -3,15 +3,14 @@ import pickle
 import src.view as view
 import src.controller as controller
 
+class SnakeUnit:
+	def __init__(self, x, y, dirs=[0,0,0,0]):
+		self.dirs = dirs # up right down left
+		self.pos = [x, y]
+		self.head = False
 
 class SnakeGame:
-	# class SnakeBody:
-	# 	def __init__(self):
-	# 		self.up = False
-	# 		self.down = False
-	# 		self.left = False
-	# 		self.right = False
-	# 		self.head = False
+
 
 	def __init__(self, hasView=True, savefile="data.snk", databoardX=30, boardY=30):
 		print("init snakegame")
@@ -22,9 +21,9 @@ class SnakeGame:
 		self.boardX = 30 # board size
 		self.boardY = 30
 
-		self.FoodScoreInc = 200
+		self.FoodScoreInc = 500
 		self.FoodLenInc = 3
-		self.ExistScoreInc = 5
+		self.ExistScoreInc = 0
 
 		self.maxFood = 1
 		self.maxFoodSpawnAttempts = 50
@@ -72,7 +71,6 @@ class SnakeGame:
 		self.maxFood = self.baseFood + (self.level*self.levelFoodInc)
 		self.updateRate = self.baseUpdateRate + (self.level*self.levelFPSInc)
 		self.maxWalls = self.baseWalls + (self.level*self.levelWallInc)
-		print(self.snake)
 
 	def saveData(self):
 		tempdata = {"highscore":self.highscore, "level":self.level}
@@ -103,10 +101,11 @@ class SnakeGame:
 	def initSnake(self, x, y, length=5):
 		# adds some amount of units to the snake, initializes their coordinates in the list
 		for i in range(x-length+1, x+1):
-			self.snake.append([i, y])
+			self.snake.append(SnakeUnit(i, y))
+		self.dir = "right"
 	
 	def getHeadPos(self):
-		return (self.snake[-1][0], self.snake[-1][1])
+		return (self.snake[-1].pos[0], self.snake[-1].pos[1])
 
 	def spawnFood(self):
 		valid = False
@@ -118,7 +117,7 @@ class SnakeGame:
 			# check if the position conflicts with snake body
 			valid = True
 			for i in self.snake:
-				if i[0] == foodx and i[1] == foody:
+				if i.pos[0] == foodx and i.pos[1] == foody:
 					valid = False
 					break
 			
@@ -154,7 +153,7 @@ class SnakeGame:
 			# check if the position conflicts with snake body
 			valid = True
 			for i in self.snake:
-				if i[0] == foodx and i[1] == foody:
+				if i.pos[0] == foodx and i.pos[1] == foody:
 					valid = False
 					break
 			
@@ -178,10 +177,46 @@ class SnakeGame:
 			# we ran out of attempts
 			print("Err: no positions to spawn wall")
 
+	def calcdirindex(self, a, b):
+		diff = (a[0]-b[0], a[1]-b[1])
+
+		# based on (up, right, down, left)
+		if diff == (0, 1):
+			return 0
+		if diff == (1, 0):
+			return 3
+		if diff == (0, -1):
+			return 2
+		if diff == (-1, 0):
+			return 1
+		
+		print("what? two same coords sent to be calculated")
+		return None
+
+	def updateUnit(self, n, blind=False):
+		unit = self.snake[n]
+		unit.dirs = [0,0,0,0]
+		if n >= 1 or blind:
+			diridx = self.calcdirindex(unit.pos, self.snake[n-1].pos)
+			if diridx:
+				unit.dirs[diridx] = 1
+		try:
+			diridx = self.calcdirindex(unit.pos, self.snake[n+1].pos)
+			if diridx:
+				unit.dirs[diridx] = 1
+		except IndexError:
+			pass
+		
+	def recalcAllLinks(self):
+		for i in range(len(self.snake)):
+			self.updateUnit(i)
+
 	def moveForward(self):
 
 		if len(self.snake) >= self.maxLength:
 			self.snake.pop(0)
+
+		self.updateUnit(0)
 
 		# get current x and y
 		cx, cy = self.getHeadPos()
@@ -190,27 +225,31 @@ class SnakeGame:
 		dx = self.dirs[self.dir][0]
 		dy = self.dirs[self.dir][1]
 
-		self.snake.append([cx+dx, cy+dy])
+		self.snake.append(SnakeUnit(cx+dx, cy+dy))
+		self.updateUnit(-1, True)
+		self.updateUnit(-2, True)
 
 	def checkGameOver(self):
 		headX, headY = self.getHeadPos()
-
 		# check for wall collide gameover
 		if not 0<=headX<=self.boardX:
+			print("gameover due to out of bounds")
 			return True
 		if not 0<=headY<=self.boardY:
+			print("gameover due to out of bounds")
 			return True
 
 		# check for self collide gameover
 		for n, i in enumerate(self.snake):
 			if n == len(self.snake)-1:
 				continue
-			if i[0] == headX and i[1] == headY:
-				#print("gameover due to self collision")
+			if i.pos[0] == headX and i.pos[1] == headY:
+				print("gameover due to self collision")
 				return True
 		
 		for i in self.walls:
 				if i[0] == headX and i[1] == headY:
+					print("gameover due to wall collision")
 					return True
 					
 		return False
@@ -267,22 +306,23 @@ class SnakeGame:
 
 		self.moveForward()
 
+		if self.checkFood():
+			self.maxLength += self.FoodLenInc
+			self.score += self.FoodScoreInc
+
 		if self.checkGameOver():
 			print("snake is dead")
 			if self.score > self.highscore:
 				self.highscore = self.score
 			return ("GameOver", self.score)
-
-		if self.checkFood():
-			self.maxLength += self.FoodLenInc
-			self.score += self.FoodScoreInc
-
 		
 		self.score += self.ExistScoreInc # give some score for surviving
 
 		if self.score >= self.levelIncScore*self.level and not self.levelUp:
 			self.level += 1
 			self.levelUp = True
+
+		print([i.dirs for i in self.snake])
 
 		# output the data
 		return self.doOutput()

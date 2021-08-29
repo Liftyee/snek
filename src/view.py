@@ -2,7 +2,7 @@ import pygame
 from pygame.locals import *
 
 print("loaded view")
-
+# make the view look better
 class Button:
     def __init__(self, screen, x, y, width=None, height=None, text=None, color=(120, 200, 40)):
         self.x = x
@@ -68,10 +68,22 @@ class View:
         self.gridScale = min(self.dispW//gridX, self.dispH//gridY)
 
     def renderSnake(self, snake):
-        for i in snake:
-            tx = i[0]*self.gridScale
-            ty = i[1]*self.gridScale
-            pygame.draw.rect(self.screen, self.snakeColor, (tx, ty, self.gridScale, self.gridScale))
+        for s in snake:
+            tx = s.pos[0]*self.gridScale
+            ty = s.pos[1]*self.gridScale
+
+            g = 4
+            pygame.draw.rect(self.screen, self.snakeColor, (tx+g, ty+g, self.gridScale-(2*g), self.gridScale-(2*g)))
+
+            if s.dirs[0]:
+                pygame.draw.rect(self.screen, self.snakeColor, (tx+g, ty, self.gridScale-(2*g), self.gridScale-g))
+            if s.dirs[1]:
+                pygame.draw.rect(self.screen, self.snakeColor, (tx+g, ty+g, self.gridScale-g, self.gridScale-(2*g)))
+            if s.dirs[2]:
+                pygame.draw.rect(self.screen, self.snakeColor, (tx+g, ty+g, self.gridScale-(2*g), self.gridScale-g))
+            if s.dirs[3]:
+                pygame.draw.rect(self.screen, self.snakeColor, (tx, ty+g, self.gridScale-g, self.gridScale-(2*g)))
+
 
     def renderFood(self, food):
         for i in food:
@@ -85,16 +97,19 @@ class View:
             ty = i[1]*self.gridScale
             pygame.draw.rect(self.screen, self.wallColor, (tx, ty, self.gridScale, self.gridScale))
     
-    def renderScore(self, score):
+    def renderScore(self, score, level):
         self.drawText("Score: " + str(score), 0, 0)
+        self.drawText("Level: " + str(level), 0, 40)
 
     def drawText(self, text, x, y):
         img1 = self.font.render(text, True, (255, 255, 255))
         self.screen.blit(img1, (x, y))
 
+    def drawImg(self, img, x, y):
+        self.screen.blit(pygame.image.load(img), (x, y))
+
     def gameOver(self, score, levelUp, level):
 
-        self.clearScreen()
         self.drawText("Game Over!", 0, 0)
         self.drawText("Your score was: "+ str(score), 0, 40)
 

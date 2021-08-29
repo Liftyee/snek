@@ -8,7 +8,7 @@ class Controller:
 	def __init__(self, game, view=None):
 		self.game = game
 		self.updateRate = self.game.updateRate
-		self.keyboardCheckRate = 60
+		self.keyboardCheckRate = 256
 		self.state = "menu"
 		self.stateInfo = "" # stores information such as game over score, etc
 		if view == None:
@@ -46,46 +46,51 @@ class Controller:
 		counter = 0
 		while True:
 			if self.state == "run":
-				try:
-					self.listenKeyboard()
+				# try:
+				self.listenKeyboard()
+				
+				if counter >= self.keyboardCheckRate//self.updateRate:
+					counter = 0
+
+					if self.view != None:
+						self.view.clearScreen()
+
+					status = self.game.step()
+					if status != None:
+						if status[0] == "GameOver":
+							self.stateInfo = status[1]
+							self.state = "GameOver"
+							continue
 					
-					if counter >= self.keyboardCheckRate//self.updateRate:
-						counter = 0
-
-						if self.view != None:
-							self.view.clearScreen()
-
-						status = self.game.step()
-						if status != None:
-							if status[0] == "GameOver":
-								self.stateInfo = status[1]
-								self.state = "GameOver"
-								continue
+					if self.view != None:
+						print("drawing snek")
+						print(status[0])
+						self.view.drawImg("grass.jpg", 0, 0)
+						self.view.renderSnake(status[0])
+						self.view.renderFood(status[1])
+						self.view.renderWalls(status[2])
+						self.view.renderScore(self.game.score, self.game.level)
+						if not self.view.update():
+							self.state = "exit"
 						
-						if self.view != None:
-							print("drawing snek")
-							print(status[0])
-							self.view.renderSnake(status[0])
-							self.view.renderFood(status[1])
-							self.view.renderWalls(status[2])
-							self.view.renderScore(self.game.score)
-							if not self.view.update():
-								self.state = "exit"
-							
-							
-					else:
-						counter += 1
-					
-					clock.tick(self.keyboardCheckRate)
+						
+				else:
+					counter += 1
+				
+				clock.tick(self.keyboardCheckRate)
 
 				# something went wrong
-				except Exception as ex:
+				# except Exception as ex:
 
-					self.state = "error"
-					self.stateInfo = ex
+				# 	self.state = "error"
+				# 	self.stateInfo = ex
 
 			# game over is happened
 			elif self.state == "GameOver":
+				self.view.drawImg("grass.jpg", 0, 0)
+				self.view.renderSnake(self.game.snake)
+				self.view.renderFood(self.game.food)
+				self.view.renderWalls(self.game.walls)
 				self.state = self.view.gameOver(self.stateInfo, self.game.levelUp, self.game.level)
 			
 			elif self.state == "menu":
@@ -114,3 +119,4 @@ class Controller:
 					self.view.drawText("Error! Check console for more info", 0, 0)
 				except:
 					pass
+				return
