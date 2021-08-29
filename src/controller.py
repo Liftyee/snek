@@ -64,7 +64,7 @@ class Controller:
 					
 					if self.view != None:
 						print("drawing snek")
-						print(status[0])
+
 						self.view.drawImg("grass.jpg", 0, 0)
 						self.view.renderSnake(status[0])
 						self.view.renderFood(status[1])
@@ -75,6 +75,8 @@ class Controller:
 						
 						
 				else:
+					if not self.view.handleQuit():
+						self.state = "exit"
 					counter += 1
 				
 				clock.tick(self.keyboardCheckRate)

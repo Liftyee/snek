@@ -103,6 +103,7 @@ class SnakeGame:
 		for i in range(x-length+1, x+1):
 			self.snake.append(SnakeUnit(i, y))
 		self.dir = "right"
+		self.recalcAllLinks()
 	
 	def getHeadPos(self):
 		return (self.snake[-1].pos[0], self.snake[-1].pos[1])
@@ -198,11 +199,11 @@ class SnakeGame:
 		unit.dirs = [0,0,0,0]
 		if n >= 1 or blind:
 			diridx = self.calcdirindex(unit.pos, self.snake[n-1].pos)
-			if diridx:
+			if diridx != None:
 				unit.dirs[diridx] = 1
 		try:
 			diridx = self.calcdirindex(unit.pos, self.snake[n+1].pos)
-			if diridx:
+			if diridx != None:
 				unit.dirs[diridx] = 1
 		except IndexError:
 			pass
@@ -321,9 +322,7 @@ class SnakeGame:
 		if self.score >= self.levelIncScore*self.level and not self.levelUp:
 			self.level += 1
 			self.levelUp = True
-
-		print([i.dirs for i in self.snake])
-
+			
 		# output the data
 		return self.doOutput()
 		

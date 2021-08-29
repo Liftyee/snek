@@ -67,6 +67,11 @@ class View:
     def updateScale(self, gridX, gridY):
         self.gridScale = min(self.dispW//gridX, self.dispH//gridY)
 
+    def drawScaledImg(self, path, x, y, scale):
+        image = pygame.image.load(path)
+        image = pygame.transform.scale(image, (scale, scale))
+        self.screen.blit(image, (x, y))
+
     def renderSnake(self, snake):
         for s in snake:
             tx = s.pos[0]*self.gridScale
@@ -89,13 +94,13 @@ class View:
         for i in food:
             tx = i[0]*self.gridScale
             ty = i[1]*self.gridScale
-            pygame.draw.rect(self.screen, self.foodColor, (tx, ty, self.gridScale, self.gridScale))
+            self.drawScaledImg("apple.png", tx, ty, self.gridScale)
     
     def renderWalls(self, walls):
         for i in walls:
             tx = i[0]*self.gridScale
             ty = i[1]*self.gridScale
-            pygame.draw.rect(self.screen, self.wallColor, (tx, ty, self.gridScale, self.gridScale))
+            self.drawScaledImg("rock.png", tx, ty, self.gridScale)
     
     def renderScore(self, score, level):
         self.drawText("Score: " + str(score), 0, 0)
@@ -105,8 +110,8 @@ class View:
         img1 = self.font.render(text, True, (255, 255, 255))
         self.screen.blit(img1, (x, y))
 
-    def drawImg(self, img, x, y):
-        self.screen.blit(pygame.image.load(img), (x, y))
+    def drawImg(self, path, x, y):
+        self.screen.blit(pygame.image.load(path), (x, y))
 
     def gameOver(self, score, levelUp, level):
 
