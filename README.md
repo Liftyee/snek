@@ -1,6 +1,6 @@
 # snake-game
 
-just a snake game
+just a simple implementation of Snake. My first! 
 
-- [ ] add snake
-- [ ] use OOP structure
+- [x] add snake
+- [x] use OOP structure
