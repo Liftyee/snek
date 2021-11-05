@@ -5,15 +5,17 @@ import sys
 print("loaded controller")
 class Controller:
 
-	def __init__(self, game, updateRate=5, view=None):
+	def __init__(self, game, view=None):
 		self.game = game
-		self.updateRate = updateRate
-		self.keyboardCheckRate = 60
-
+		self.updateRate = self.game.updateRate
+		self.keyboardCheckRate = 256
+		self.state = "menu"
+		self.stateInfo = "" # stores information such as game over score, etc
 		if view == None:
 			print("noview")
+		else:
+			view.updateScale(game.boardX, game.boardY)
 		self.view = view
-		
 
 	def randpos(self, startX, endX, startY, endY):
 		return (randint(startX, endX), randint(startY, endY))
@@ -30,6 +32,9 @@ class Controller:
 		if keys[ord('s')]:
 			self.game.go_down()
 
+	def updateScale(self, x, y):
+		self.view.updateScale(x, y)
+
 
 	def run(self):
 		clock = pygame.time.Clock()
@@ -40,28 +45,80 @@ class Controller:
 		 # FPS
 		counter = 0
 		while True:
-
-			self.listenKeyboard()
-			
-			if counter >= self.keyboardCheckRate//self.updateRate:
-				counter = 0
-
-				if self.view != None:
-					self.view.clearScreen()
-
-				status = self.game.step()
-				if status != None:
-					if status[0] == "GameOver":
-						
-						print("Game Over!")
-						print("Score was", status[1])
-						break
+			if self.state == "run":
+				# try:
+				self.listenKeyboard()
 				
-				if self.view != None:
-					if not self.view.update():
-						exit()
+				if counter >= self.keyboardCheckRate//self.updateRate:
+					counter = 0
+
+					if self.view != None:
+						self.view.clearScreen()
+
+					status = self.game.step()
+					if status != None:
+						if status[0] == "GameOver":
+							self.stateInfo = status[1]
+							self.state = "GameOver"
+							continue
+					
+					if self.view != None:
+						print("drawing snek")
+
+						self.view.drawImg("grass.jpg", 0, 0)
+						self.view.renderSnake(status[0])
+						self.view.renderFood(status[1])
+						self.view.renderWalls(status[2])
+						self.view.renderScore(self.game.score, self.game.level)
+						if not self.view.update():
+							self.state = "exit"
+						
+						
+				else:
+					if not self.view.handleQuit():
+						self.state = "exit"
+					counter += 1
+				
+				clock.tick(self.keyboardCheckRate)
+
+				# something went wrong
+				# except Exception as ex:
+
+				# 	self.state = "error"
+				# 	self.stateInfo = ex
+
+			# game over is happened
+			elif self.state == "GameOver":
+				self.view.drawImg("grass.jpg", 0, 0)
+				self.view.renderSnake(self.game.snake)
+				self.view.renderFood(self.game.food)
+				self.view.renderWalls(self.game.walls)
+				self.state = self.view.gameOver(self.stateInfo, self.game.levelUp, self.game.level)
+			
+			elif self.state == "menu":
+				self.state = self.view.mainMenu(self.game.level, self.game.highscore)
+				
+			elif self.state == "exit":
+				self.game.saveData()
+				return 0
+			
+			elif self.state == "restart":
+				self.game.reset()
+				self.state = "run"
+				self.updateRate = self.game.updateRate
+
+			elif self.state == "deldata":
+				self.game.resetData()
+				self.state = "menu"
+
+			elif self.state == None:
+				print("is none")
 			else:
-				counter += 1
-			
-			clock.tick(self.keyboardCheckRate)
-			
+				print("An error occurred.")
+				print(self.stateInfo)
+				try: 
+					self.view.clearScreen()
+					self.view.drawText("Error! Check console for more info", 0, 0)
+				except:
+					pass
+				return
