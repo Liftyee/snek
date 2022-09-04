@@ -1,6 +1,6 @@
 # snake-game
 
-just a simple implementation of Snake. My first! 
+Snek: A simple implementation of "Snake". My first! 
 Trying out MVC (Model-View-Controller) code structure, just like they do in industry.
 
 - [x] add snake
